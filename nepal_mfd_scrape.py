@@ -20,13 +20,18 @@ def get_ktm_temp_data(y):
     fname = 'ktm_temp_data' + str(y) + '.csv'
     f = open(fname, 'w')
     f.write('fmin_lo, fmin_hi, fmax_lo, fmax_hi, max, min \n')
-    for m in range(1, 13):
+    for m in range(1, 13):   #use of xrange is considered better
         foo, days = calendar.monthrange(y, m)
-        for d in range(1, days+1):
+        for d in range(1, days+1): #xrange
             url = 'http://www.mfd.gov.np/archivereport.php?year=' + \
                   str(y) + '&month=' + str(m)+'&day=' + str(d)
             page = urllib2.urlopen(url)
+            #you might want to pass a parser to BeautifulSoup. The default parser does not parse malformed html pages correctly.
+            #apt-get install python-lxml
+            #soup = BeautifulSoup(page, "lxml")
             soup = BeautifulSoup(page)
+
+            #### Please try to separate the parsing logic to a different function. This will make the code easy to maintain if ever the structure of the page changes.
             citytag  = soup.find_all('td', text=re.compile("Kathmandu "))
             try:
                 max_temp_tag = citytag[0].find_next('td')
@@ -34,7 +39,7 @@ def get_ktm_temp_data(y):
                 continue
             min_temp_tag =  max_temp_tag.find_next('td')
 
-        # Forecasted temperature
+            #### Forecasted temperature
             btag = soup.find_all('b')
             fmintemp = str(btag[9].get_text())
             sepidx = fmintemp.find('-', 1)
@@ -46,6 +51,7 @@ def get_ktm_temp_data(y):
             fmax_temp_lo = (fmaxtemp[:sepidx])
             fmax_temp_hi = (fmaxtemp[sepidx+1:])
         
+            #### Also you might want to delegate this to a different function (collect the data in some data structure and pass it to the function)
             print 'Writing data for' + str(m)+ "/" + str(d)
             f.write(fmin_temp_lo + ',' + \
                     fmin_temp_hi + ',' + \
